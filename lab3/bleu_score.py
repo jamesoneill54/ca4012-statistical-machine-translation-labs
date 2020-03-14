@@ -1,4 +1,3 @@
-import sys
 import statistics
 import math
 from ngrams import ngrams
@@ -10,13 +9,14 @@ def get_bleu_score(translation, references):
     print("Brevity: {}\t|\tN-Gram Overlap: {}".format(brevity_penalty, ngram_overlap))
     return brevity_penalty * ngram_overlap
 
+
 def calculate_brevity_penalty(translation, references):
     mean_ref_len = statistics.mean([len(ngrams(ref)[0]) for ref in references])
     mean_ref_len += 0.5
     return min(1, (len(ngrams(translation)[0])/math.floor(mean_ref_len)))
 
+
 def match_ngrams(trans_ngrams, multi_ref_ngrams):
-    """This function takes an ith ngram and returns the number of matching ngrams."""
     matched = []
     for ngram in trans_ngrams:
         i = 0
@@ -27,6 +27,7 @@ def match_ngrams(trans_ngrams, multi_ref_ngrams):
                 found_ngram = True
             i += 1
     return matched
+
 
 def get_ngram_overlap(translation, references):
     trans_ngrams = ngrams(translation)
@@ -45,12 +46,14 @@ def get_ngram_overlap(translation, references):
         i += 1
     return product ** 0.25
 
+
 if __name__ == "__main__":
     #  tran = input("translation: ")
     #  ref = input("reference: ")
     #  print(get_bleu_score(tran, ref))
-    print(get_bleu_score("The gunman was shot dead by police.", ["The gunman was shot to death by the police.",
-        "The gunman was shot to death by the police.",
-        "Police killed the gunman.",
-        "The gunman was shot dead by the police."]))
+    print(get_bleu_score("The gunman was shot dead by police.",
+                         ["The gunman was shot to death by the police.",
+                          "The gunman was shot to death by the police.",
+                          "Police killed the gunman.",
+                          "The gunman was shot dead by the police."]))
 

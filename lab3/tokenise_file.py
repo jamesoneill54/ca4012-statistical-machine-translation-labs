@@ -10,9 +10,11 @@ def tokenise_file(filename):
                 out_file.write(tokenised + "\n")
     print("written to '{}'".format(filename + ".tkn"))
 
+
 def tokenise(line):
     tokens = re.findall(r"[\w]+|[.,!?;'\"]", line)
     return " ".join(tokens).lower()
+
 
 if __name__ == "__main__":
     tokenise_file(sys.argv[1])

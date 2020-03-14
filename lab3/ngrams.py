@@ -16,6 +16,7 @@ def ngrams(line):
         ngram += 1
     return out
 
+
 if __name__ == "__main__":
     for ngram in enumerate(ngrams(sys.stdin.readline())):
         print("{}-gram: {}".format(ngram[0] + 1, ngram[1]))
