@@ -1,0 +1,3 @@
+16410652
+James O'Neill
+Expectation Maximisation (EM) uses the occurrences of certain word pairs in alignments to determine their likeliness. At the start, every alignment of the source and target tokens is considered equally likely, and by iteratively normalising the probabilities and counting the occurrences of each token alignment, the most likely translation for each target token is found. The IBM Model 1 splits this up into three steps: (i) Initialise model parameters; (ii) collect counts for word pairs; and (iii) estimate new model parameters. These steps are continually iterated over until the probabilities converge, and the most likely alignments are found.
