@@ -4,7 +4,13 @@
 1. [Introduction](#introduction)
 2. [SMT & NMT Evaluation](#smt--nmt-evaluation)
 3. [Decoding](#decoding)
-
+    1. [Distance-Based Reordering](#distance-based-reordering)
+    2. [Log-Linear Model](#log-linear-model)
+    3. [Decoding](#decoding-1)
+    4. [Making Decoding Manageable](#making-decoding-manageable)
+4. [Neural Networks & Translation](#neural-networks--translation)
+    1. [Feed Forward Neural Network](#feed-forward-neural-network)
+    2. [Neural Machine Translation](#neural-machine-translation)
 ## Introduction
 
 - SMT is mostly all about the data.
@@ -29,7 +35,7 @@
     ```
     (1) Decoder -> (2) Language Model -> (3) Translation Model
     ```
-  
+
 ## SMT & NMT Evaluation
 
 - Quality of a translation is ambiguous, and varies for different situations and changes for different users. 
@@ -161,3 +167,51 @@
 - Pruning Strategies:
     1. Histogram Pruning - Keep a maximum of `m` hypotheses in a stack. (eg. keep only the top 4 hypotheses.)
     2. Threshold or Beam Pruning - Keep only those hypotheses that are within a threshold `a` of the best hypothesis (`a * best_score(a < 1)`). Any hypothesis that is `a` times worse than the best is pruned. (eg. keep only hypotheses that have a probability of 0.5 or higher.)
+
+## Neural Networks & Translation
+
+- The fundamental building block of a Neural Network is the **Neuron.**
+- A Neuron is made up of an Activation function applied to weighted input numbers.
+    - **Weighted Sum:** The weighted sum involves taking an input number and multiplying it by the given weight. 
+    - **Activation:** The activation function takes the output of the weighted sum and applies a logistical mapping to it (the mapping we are using is the **sigmoid curve**).
+- Neurons are either (i) switched off, (ii) switched on, or (iii) some degree between on and off. 
+
+### Feed Forward Neural Network
+
+> Otherwise known as a Multilayer Perceptron
+
+- Consists of an input layer, some amount of hidden layers, and an output layer. 
+- We assume that all nodes at one level are connected to all the nodes at the level above and the level above (fully connected).
+- The connections between nodes at different levels have different weightings. 
+- The millions of feed-forward calculations can be expressed as **matrix-multiplication.**
+- If we have more than one hidden layer it is called **deep learning.**
+- A bias is added after the activation function to ensure no neuron has a value of zero. 
+- The two **network parameters** used to train are *weight matrices* and *bias vectors.*
+
+**Training:**
+- Iteratively updating the weights. 
+- Start by randomly assigning weights to each node.
+- Then show the network examples of inputs and expected outputs and update the weights using *backpropagation,* so the network outputs match the expected outputs. 
+- The weights are updated until it is working the way we want. 
+- Each test has a label which is compared to the output. If the output doesn't match the label, then the error is computed, and the value is pushed back through the network to update the weights and biases.
+- The same input is then pushed through the network until the correct result is achieved. 
+- This training takes many sessions. 
+
+**Gradient Descent:**
+- Gradient descent is used to change the biases and weights of the neural network.
+- The closer a neural network is to getting the correct outcome, the less the weights and biases are changed. 
+
+**Word Representation:**
+- Using one-hot vectors where only one value in the vector is equal to one, the rest are zero. 
+- Words are represented using their *word embeddings* (where the word is located in sample sentences).
+- Each word is represented by a vector of numbers that positions the word in a **multi-dimensional space,** with similar words closer to each other. 
+
+**Recurrent Neural Network:**
+- This involves the neurons being connected to themselves, so the output of the current node can influence the next output of the same neuron. 
+
+### Neural Machine Translation
+
+- The state of the encoder changes for each word in the source sentence, and the natural language model translates the sentence using the last state of the encoder once it has parsed the entire source sentence. 
+- The attention model provides extra clues in the encoding stage using the context of the word in the sentence to define the best translation. 
+- There exists now a neural network for machine translation that is bi-directional when producing an output for the language model. 
+- Multilingual MT can translate unknown language pairs using other language pairs as a bridge between the two. 
