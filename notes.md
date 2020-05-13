@@ -3,14 +3,16 @@
 ## Contents
 1. [Introduction](#introduction)
 2. [SMT & NMT Evaluation](#smt--nmt-evaluation)
-3. [Decoding](#decoding)
+3. [Translation Modelling](#translation-modelling)
+4. [Decoding](#decoding)
     1. [Distance-Based Reordering](#distance-based-reordering)
     2. [Log-Linear Model](#log-linear-model)
     3. [Decoding](#decoding-1)
     4. [Making Decoding Manageable](#making-decoding-manageable)
-4. [Neural Networks & Translation](#neural-networks--translation)
+5. [Neural Networks & Translation](#neural-networks--translation)
     1. [Feed Forward Neural Network](#feed-forward-neural-network)
     2. [Neural Machine Translation](#neural-machine-translation)
+    
 ## Introduction
 
 - SMT is mostly all about the data.
@@ -31,7 +33,7 @@
     - Developed from a parallel data. 
 - **Language Model:** Models how likely it is that `e` is an acceptable sentence - **Fluency**
     - Developed from a monolingual data.
-- The translation model and language model make up two of the three parts of an SMT, the third being the **decoder.**
+- The translation model and language model make up two of the three parts of an SMT, the third being the **decoder.** This is known as the **Noisy Channel Model.**
     ```
     (1) Decoder -> (2) Language Model -> (3) Translation Model
     ```
@@ -66,6 +68,15 @@
     3-gram/trigram = ['the cat sat', 'cat sat on', 'sat on the', on the mat']
     ```
     - BLEU gives preference to more verbose translations, applying a brevity penalty if the MT is shorter than the reference. 
+    - BLEU is given by the following function: 
+        ```
+        BLEU = min(1, (output_length / reference_length) (for each ngram from 1-4, calculate precision)^1/4
+        ```
+    - Clipped n-gram precision is given by: 
+        ```
+        Precision = number of clipped correct ngram in output / total number of ngrams in output. 
+        ```
+    - Clipped n-gram precision is the number of correct n-grams in the output compared to the amount of times that n-gram appeared in the reference. The number of times the n-gram occurs in the output is clipped by the number of times it appears in the reference. 
 - **METEOR** gives a score for synonyms (partial credit).
 - **Criticism of Automatic Translation:**
     - Ignores relevant words.
@@ -78,6 +89,55 @@
     - Assesses usefulness of MT system in production.
     - Identify common errors.
     - Creates new training/test data. 
+
+## Translation Modelling
+
+> Models statistically the process of translation, encodes the faithfulness of `e` as a translation of `f`, and models the probability of the foreign sentence given possible translations. 
+
+- To estimate translation probabilities, you will need to use **maximum likelihood estimation.** This involves gathering the counts of all possible translations for a word or phrase, and dividing each by the total number of translations for that word or phrase. 
+- Translation probabilities are estimate from a parallel sentence-aligned corpus. 
+- However, words are not initially aligned, so we need to know which words in the source are aligned to which words in the target before we can count the co-occurrences and calculate the probabilities. 
+- To find the alignments of source words to their target words, we have to use **expectation maximisation.**
+
+**Expectation Maximisation**:
+
+1. Initialise model parameters
+2. Assign probabilities to missing data
+3. Estimate model parameters from completed data
+4. Iterate
+
+- With each pass, it becomes more clear which alignments are more likely given multiple source and target sentences. 
+ 
+**Expectation Maximisation Formula:**
+
+1. Set the possible alignments of words from source to target as equally likely. 
+2. 
+    1. Compute the probability of word `f` and word `e` under alignment `a`:
+        ```
+        p(a1, wordA wordB | wordX wordY) = t(wordA|wordX) * t(wordB|wordY) 
+        p(a2, wordA wordB | wordX wordY) = t(wordA|wordY) * t(wordB|wordX)
+        p(a3, wordB | wordX) = t(wordB|wordX)
+        ```
+    2. Normalise for all alignments (add the outcomes for each alignment of that particular sentence, then divide each alignment by its alignment summation.)
+3. 
+    1. Collect fractional counts (translation counts) for each translation pair. ie. for each translation pair, sum values of `p(a|e,f)` where the word pair occurs. 
+    2. Normalise fractional counts to get revised parameters for `t`. (sum of fractional/translation counts for translation pair where `f` occurs.)
+4. Iterate all previous steps using the outcome of step 3 as translation probabilities for step 1, until convergence. 
+
+## IBM Models
+
+> A statistical model that generates a number of different translations for a sentence. 
+
+**Model 1:**
+
+- Allows alignments of one-to-one, many-to-one but doesn't allow many-to-one. 
+- IBM model 1 basically the same as EM. 
+- Deficiencies as incorrect sentences given same probability as correct ones. 
+- It regards all orderings as equally likely. 
+
+**Model 2:**
+
+- 
 
 ## Decoding
 
@@ -98,7 +158,7 @@
 
 ### Log-Linear Model
 
-- Phrase-based model is comprised of three sub-models:
+- Phrase-based model consists of three sub-models:
     1. The Translation Model,
     2. The Reordering/Distance-Based Model, and
     3. The Language Model.
@@ -215,3 +275,82 @@
 - The attention model provides extra clues in the encoding stage using the context of the word in the sentence to define the best translation. 
 - There exists now a neural network for machine translation that is bi-directional when producing an output for the language model. 
 - Multilingual MT can translate unknown language pairs using other language pairs as a bridge between the two. 
+
+## Neural Language Modelling
+
+### Language Models
+
+- Language Models assigns a probability to a sequence of words. 
+- Most Natural Language Processing can be structured as (conditional) language modelling. 
+- Most language models employ **the chain rule** to decompose joint probability into a sequence of conditional probabilities. Given a sentence, probability of word 2 being valid is calculated using the conditional probability that it follows word 1, probability of word 3 being valid is calculated using the conditional probability that it follows word 1 and 2, etc...
+- Our knowledge of the previous words in the sentence **heavily constrains the distribution** of probable words for the next word. 
+
+**Evaluating a Language Model:**
+
+- A good model assigns real utterances from a language a *high probability.*
+- Measuring how good a language model is at assigning high probabilities to real utterances can be done using:
+    1. Cross Entropy: A measure of how many bits are needed to encode text with our model. 
+    2. Perplexity: A measure of how surprised the model is on seeing each word. 
+
+### N-Gram Models
+
+> N-gram models are based on the Markov Chain Assumption.
+
+**The Markov Chain Assumption:**
+- Assumption:
+    - Only previous history matters.
+    - Limited memory: only last k - 1 words are included in history, older words are less relevant.
+
+**Estimating Probabilities:**
+- Maximum likelihood estimation for 3-grams: `p(w3|w1, w2) = count(w1, w2, w3) / count(w1, w2)`
+- Collect counts over a large text corpus. 
+
+### Neural Language Models
+
+**Feed-Forward Network:**
+- Sampling: Taking only the most probable words in the corpus to run through the neural network. 
+- N-gram models are used in conjunction with neural language models to predict the next word. 
+- Both previous words are fed into the neural language model, and the most probable translation is taken from the sampled corpus. 
+- Backpropagation can take place in the neural network. 
+- Advantages:
+    - Better generalisation on unseen n-grams, poorer on seen n-grams. 
+    - Simple Neural Language Models are often significantly smaller in memory footprint than count based n-gram models. 
+- Disadvantages:
+    - The number of parameters in the model scales with the n-gram size and thus the length of history captured. 
+    - The n-gram history is finite and thus there is a limit on the longest dependencies that are being captured. 
+
+**Recurrent Neural Network:**
+- Each hidden layer influences the next calculations hidden layer. 
+- Word 0 is processed, and its hidden layer influences the hidden layer of word 1 along with word 2 influencing it. 
+
+## Neural Network Algorithms & Mathematics
+
+- The activation function can be of different types; most popular ones are step, softmax, sigmoid, and cubolic(?). 
+- The activation function calculates the output of the neuron based on the inputs of the neuron. 
+- All the inputs are multiplied by their weights, and then the bias is added. This is the value that the activation function will use. 
+    ```
+    for (int i = 0; i < weights.length; i++) {
+        output[i] = weights[i] * inputs[i] + bias;
+    }
+    for (double output: outputs) {
+        activation(output);
+    }
+    ```
+- The cost function allows the network to be trained. It calculates the error between the expected output and the actual output of the NN. 
+- **Gradient Descent:** Training a neural network to find weights and biases which minimise the quadratic cost function. Sometimes known as SGD which is Stochastic Gradient Descent.
+- Have to be aware of local minimums, we are trying to achieve global minimum. 
+- The gradient descent involves repeatedly updating the weights and biases step-wise to find the minimum cost. 
+
+> Note: the sigmoid activation function is:
+> ```
+> sigmoid(z) = 1 / 1 + e^-z
+> ```
+
+### Back-Propagation for SGD 
+
+1. Input a set of training examples.
+2. For each training example `x`: Set the corresponding input activation and perform the following steps: 
+    1. Feedforward: For each layer, compute the sigmoid of the node for the given weights and biases.
+    2. Output error.
+    3. Back-propagate the error: For each layer (moving backwards), compute the cost function. 
+3. Gradient descent: For each layer (moving backwards) update the weights according to the rule... and biases according to the rule...
